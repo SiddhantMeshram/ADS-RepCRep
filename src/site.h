@@ -1,0 +1,27 @@
+#ifndef SITE_H
+#define SITE_H
+
+#include <string>
+#include "data_manager.h"
+
+class Site {
+public:
+    Site(const std::string &name);
+    int readData(const std::string &variable);
+    void writeLocal(const std::string &variable, const std::string &transaction_name, int value); 
+    void commitData(const std::string &transaction_name); 
+
+    bool isUp();
+    void setUp(bool status);
+    void setDown(bool status);
+
+private:
+    std::string name;
+    // Site status Up or Down
+    bool status; 
+    std::time_t last_down_timestamp; 
+    DataManager data_manager; 
+};
+
+
+#endif
