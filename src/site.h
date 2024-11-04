@@ -12,14 +12,14 @@ public:
     void commitData(const std::string &transaction_name); 
 
     bool isUp();
-    void setUp(bool status);
-    void setDown(bool status);
+    void setUp();
+    void setDown();
 
 private:
     std::string name;
     // Site status Up or Down
     bool status; 
-    std::time_t last_down_timestamp; 
+    int last_down_timestamp; 
     DataManager data_manager; 
 };
 
