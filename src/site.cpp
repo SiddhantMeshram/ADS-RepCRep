@@ -35,3 +35,7 @@ void Site::setDown() {
     last_down_timestamp = 0; // TODO: change 0 to current time counter
 }
 
+void Site::addVariable(const std::string &variable, int value) {
+    data_manager.addVariable(variable, value);
+}
+

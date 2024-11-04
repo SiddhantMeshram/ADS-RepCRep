@@ -28,3 +28,9 @@ void DataManager::commitData(const std::string &variable, int value) {
     variables[variable].commit_timestamp = 0; // TODO: change 0 to current time counter
 }
 
+void DataManager::addVariable(const std::string &variable, int value) {
+    if (variables.find(variable) == variables.end()) {
+        variables[variable] = Variable(value);
+    }
+}
+
