@@ -3,15 +3,34 @@
 #include <fstream>
 #include <sstream>
 #include <unordered_set>
+#include <unordered_map>
 #include <cassert>
 
 #include "transaction_manager.h"
+#include "site.h"
 
 using namespace std;
 
 TransactionManager::TransactionManager(const string& file_name) {
   
-  // Create Sites and initialize avriables if reqiuired.
+  // Create sites.
+  for (int ii = 1; ii <= 10; ++ii) {
+    site_map[ii] = make_shared<Site>("site " + ii, ii);
+  }
+
+  // Initialize variables in relevant sites.
+  for (int ii = 1; ii <= 20; ++ii) {
+    string var_name = "x" + ii;
+    if (ii % 2) {
+      site_map[1 + (ii % 10)]->addVariable(var_name, ii * 10);
+      variable_to_site_map[var_name] = 1 + (ii % 10);
+    } else {
+      for (auto& kv : site_map) {
+        (kv.second)->addVariable(var_name, ii * 10);
+        variable_to_site_map[var_name] = 1 + (ii % 10);
+      }
+    }
+  }
 
   // Process Input.
   ProcessInput(file_name);
@@ -55,7 +74,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "dump") {
 
     } else {
-      assert("Unexpected command");
+      assert(false && "Unexpected command");
     }
   }
 

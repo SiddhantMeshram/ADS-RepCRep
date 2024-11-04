@@ -5,6 +5,9 @@
 
 using namespace std;
 
+// Forward Declarations.
+class Site;
+
 class TransactionManager {
 
   public:
@@ -12,6 +15,9 @@ class TransactionManager {
   
   private:
     void ProcessInput(const string& file_name);
+
+    unordered_map<int, shared_ptr<Site>> site_map;
+    unordered_map<string, int> variable_to_site_map;
 };
 
 #endif
