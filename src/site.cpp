@@ -1,7 +1,7 @@
 #include "site.h"
 #include "data_manager.h"
 
-Site::Site(const std::string &name) : name(name), status(true), last_down_timestamp(0) {}
+Site::Site(const int &index) : site_index(index), name("site " + std::to_string(site_index)), status(true), last_down_timestamp(0) {}
 
 int Site::readData(const std::string &variable) {
      return data_manager.getValue(variable);

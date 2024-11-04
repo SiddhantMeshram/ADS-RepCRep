@@ -15,9 +15,11 @@ class TransactionManager {
   
   private:
     void ProcessInput(const string& file_name);
+    vector<int> getSitesforVariables(const string& var);
 
     unordered_map<int, shared_ptr<Site>> site_map;
     unordered_map<string, int> variable_to_site_map;
+
 };
 
 #endif

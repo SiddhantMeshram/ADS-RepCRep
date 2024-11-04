@@ -6,7 +6,7 @@
 
 class Site {
 public:
-    Site(const std::string &name);
+    Site(const int& index);
     int readData(const std::string &variable);
     void writeLocal(const std::string &variable, const std::string &transaction_name, int value); 
     void commitData(const std::string &transaction_name); 
@@ -17,6 +17,7 @@ public:
     void setDown();
 
 private:
+    int site_index;
     std::string name;
     // Site status Up or Down
     bool status; 

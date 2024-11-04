@@ -15,25 +15,34 @@ TransactionManager::TransactionManager(const string& file_name) {
   
   // Create sites.
   for (int ii = 1; ii <= 10; ++ii) {
-    site_map[ii] = make_shared<Site>("site " + ii, ii);
+    site_map[ii] = make_shared<Site>(ii);
   }
 
   // Initialize variables in relevant sites.
   for (int ii = 1; ii <= 20; ++ii) {
-    string var_name = "x" + ii;
-    if (ii % 2) {
-      site_map[1 + (ii % 10)]->addVariable(var_name, ii * 10);
-      variable_to_site_map[var_name] = 1 + (ii % 10);
-    } else {
-      for (auto& kv : site_map) {
-        (kv.second)->addVariable(var_name, ii * 10);
-        variable_to_site_map[var_name] = 1 + (ii % 10);
-      }
+    string var_name = "x" + to_string(ii);
+    for (int site_index : getSitesforVariables(var_name)) {
+      site_map[site_index]->addVariable(var_name, site_index * 10);
     }
   }
 
   // Process Input.
   ProcessInput(file_name);
+}
+
+vector<int> TransactionManager::getSitesforVariables(const string& var) {
+
+  int var_index = stoi(var.substr(1));
+  if (var_index % 2) {
+    return {1 + (var_index % 10)};
+  }
+
+  vector<int> ret;
+  for (auto& kv : site_map) {
+    ret.push_back(kv.first);
+  }
+
+  return ret;
 }
 
 void TransactionManager::ProcessInput(const string& file_name) {

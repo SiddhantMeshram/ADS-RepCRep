@@ -18,6 +18,7 @@ public:
     {
         int value;
         int commit_timestamp;
+        Variable() : value(0), commit_timestamp(0) {}
         Variable(int val) : value(val), commit_timestamp(0) {}
         Variable(int val, int ct) : value(val), commit_timestamp(ct) {} 
     };
