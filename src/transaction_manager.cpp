@@ -74,17 +74,15 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "R") {
       processRead(params);
     } else if (command == "W") {
-
+      processWrite(params);
     } else if (command == "fail") {
-
+      site_map[stoi(params[0])]->setDown(timer);
     } else if (command == "recover") {
-
+      site_map[stoi(params[0])]->setUp();
     } else if (command == "end") {
 
-    } else if (command == "fail") {
-
     } else if (command == "dump") {
-
+      dump();
     } else {
       assert(false && "Unexpected command");
     }
@@ -122,7 +120,29 @@ void TransactionManager::processRead(const vector<string>& params) {
 void TransactionManager::processBegin(const vector<string>& params, int timer) {
   Transaction newTransaction(params[0], timer);
   active_transactions.push_back(newTransaction);
+}
 
+void TransactionManager::processWrite(const vector<string>& params) {
+
+  const string& txn_name = params[0];
+  const string& var = params[1];
+  int value = stoi(params[2]);
+  vector<int> sites = getSitesforVariables(params[1]);
+  bool no_writes = true;
+  for (int ii : sites) {
+    if (site_map[ii]->isUp()) {
+      site_map[ii]->writeLocal(var, txn_name, value);
+      no_writes = false;
+    }
+  }
+
+  // TODO: Check what needs to be done if no site was up when a write came.
+  if (no_writes) {
+
+  }
+}
+
+void TransactionManager::dump() {
 }
 
 int main(int argc, char *argv[]) {

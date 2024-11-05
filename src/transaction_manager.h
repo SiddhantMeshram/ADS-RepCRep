@@ -18,6 +18,8 @@ class TransactionManager {
     vector<int> getSitesforVariables(const string& var);
     void processRead(const vector<string>& params);
     void processBegin(const vector<string>& params, int timer);
+    void processWrite(const vector<string>& params);
+    void dump();
 
     unordered_map<int, shared_ptr<Site>> site_map;
     unordered_map<string, int> variable_to_site_map;

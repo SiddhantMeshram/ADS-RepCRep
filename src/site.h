@@ -15,8 +15,10 @@ public:
 
     bool isUp();
     void setUp();
-    void setDown();
     int last_down();
+    void setDown(int timer);
+    string getName();
+    string getDump();
 
 private:
     int site_index;
