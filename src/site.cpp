@@ -1,5 +1,6 @@
 #include "site.h"
 #include "data_manager.h"
+#include <cassert>
 
 Site::Site(const int &index) : site_index(index), name("site " + std::to_string(site_index)), status(true), last_down_timestamp(0) {}
 

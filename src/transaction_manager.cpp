@@ -22,7 +22,7 @@ TransactionManager::TransactionManager(const string& file_name) {
   for (int ii = 1; ii <= 20; ++ii) {
     string var_name = "x" + to_string(ii);
     for (int site_index : getSitesforVariables(var_name)) {
-      site_map[site_index]->addVariable(var_name, site_index * 10);
+      site_map[site_index]->addVariable(var_name, ii * 10);
     }
   }
 
@@ -49,10 +49,12 @@ void TransactionManager::ProcessInput(const string& file_name) {
 
   ifstream input(file_name);
   string line;
+  int timer = 0;
   while (getline(input, line)) {
+    ++timer;
     string command, var;
     unordered_set<char> delimiters{'(', ')', ','};
-    vector<string> variables;
+    vector<string> params;
 
     for (int ii = 0; ii < line.size(); ++ii) {
         if (delimiters.find(line[ii]) != delimiters.end()) {
@@ -63,13 +65,13 @@ void TransactionManager::ProcessInput(const string& file_name) {
     istringstream iss(line);
     iss >> command;
     while (iss >> var) {
-      variables.push_back(var);
+      params.push_back(var);
     }
 
     if (command == "begin") {
 
     } else if (command == "R") {
-
+      processRead(params);
     } else if (command == "W") {
 
     } else if (command == "fail") {
@@ -88,6 +90,19 @@ void TransactionManager::ProcessInput(const string& file_name) {
   }
 
   input.close();
+}
+
+void TransactionManager::processRead(const vector<string>& params) {
+
+  vector<int> sites = getSitesforVariables(params[1]);
+  for (int ii : sites) {
+    if (site_map[ii]->isUp()) {
+      cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
+      break;
+    }
+  }
+
+  return;
 }
 
 int main(int argc, char *argv[]) {
