@@ -2,6 +2,7 @@
 #define TRANSACTION_MANAGER_H
 
 #include <string>
+#include <map>
 
 using namespace std;
 
@@ -21,7 +22,7 @@ class TransactionManager {
     void processWrite(const vector<string>& params);
     void dump();
 
-    unordered_map<int, shared_ptr<Site>> site_map;
+    map<int, shared_ptr<Site>> site_map;
     unordered_map<string, int> variable_to_site_map;
 
     struct Transaction

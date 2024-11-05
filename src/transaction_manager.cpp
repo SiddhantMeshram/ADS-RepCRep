@@ -143,6 +143,9 @@ void TransactionManager::processWrite(const vector<string>& params) {
 }
 
 void TransactionManager::dump() {
+  for (auto& kv : site_map) {
+    cout << (kv.second)->getName() << " - " << (kv.second)->getDump() << endl;
+  }
 }
 
 int main(int argc, char *argv[]) {

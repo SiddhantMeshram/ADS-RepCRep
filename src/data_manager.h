@@ -31,6 +31,14 @@ public:
         Variable(int val, int ct) : value(val), commit_timestamp(ct) {} 
     };
 
+    static bool dumpCompare(pair<string, int>& p1, pair<string, int>& p2) {
+        if (p1.first.size() == p2.first.size()) {
+            return p1 < p2;
+        }
+
+        return p1.first.size() < p2.first.size();
+    }
+
     unordered_map<string, Variable> variables;
     
 };

@@ -2,6 +2,8 @@
 
 #include "data_manager.h"
 
+using namespace std;
+
 DataManager::DataManager() {
 
 }
@@ -47,4 +49,18 @@ void DataManager::writeLocal(const string &variable, const string &transaction_n
 }
 
 string DataManager::getDump() {
+
+    vector<pair<string, int>> vec;
+    for (auto& kv : variables) {
+        vec.push_back({kv.first, kv.second.value});
+    }
+
+    sort(vec.begin(), vec.end(), dumpCompare);
+    string ret;
+    for (int ii = 0; ii < vec.size(); ++ii) {
+        ret += vec[ii].first + ": " + to_string(vec[ii].second) + ", ";
+    }
+
+    ret.erase(ret.size() - 2);
+    return ret;
 }

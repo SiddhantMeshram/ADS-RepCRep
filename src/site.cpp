@@ -25,7 +25,7 @@ void Site::commitData(const string &transaction_name) {
 }
 
 int Site::getLastCommittedTimestamp(const std::string &variable) {
-    data_manager.getLastCommittedTimestamp(variable);
+    return data_manager.getLastCommittedTimestamp(variable);
 }
 
 bool Site::isUp() {
