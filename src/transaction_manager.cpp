@@ -69,6 +69,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
     }
 
     if (command == "begin") {
+      processBegin(params, timer);
 
     } else if (command == "R") {
       processRead(params);
@@ -97,12 +98,31 @@ void TransactionManager::processRead(const vector<string>& params) {
   vector<int> sites = getSitesforVariables(params[1]);
   for (int ii : sites) {
     if (site_map[ii]->isUp()) {
-      cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
-      break;
+      // from active_transactions find params[0] say t
+      Transaction t;
+      bool transaction_found = false;
+      for(auto transaction : active_transactions){
+        if(transaction.transaction_name == params[0]){
+          t = transaction;
+          transaction_found = true;
+          break;
+        }
+      }
+      if(transaction_found == false) cout << "Expected Transaction" << endl; 
+      if((site_map[ii]->last_down() < t.begin_time) && (site_map[ii]-> getLastCommittedTimestamp(params[1]) < t.begin_time)){
+        cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
+        break;
+      }
     }
   }
 
   return;
+}
+
+void TransactionManager::processBegin(const vector<string>& params, int timer) {
+  Transaction newTransaction(params[0], timer);
+  active_transactions.push_back(newTransaction);
+
 }
 
 int main(int argc, char *argv[]) {

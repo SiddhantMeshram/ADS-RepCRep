@@ -23,6 +23,10 @@ void Site::commitData(const std::string &transaction_name) {
    
 }
 
+int Site::getLastCommittedTimestamp(const std::string &variable) {
+    data_manager.getLastCommittedTimestamp(variable);
+}
+
 bool Site::isUp() {
     return status;
 }
@@ -38,5 +42,9 @@ void Site::setDown() {
 
 void Site::addVariable(const std::string &variable, int value) {
     data_manager.addVariable(variable, value);
+}
+
+int Site::last_down() {
+    return last_down_timestamp;
 }
 

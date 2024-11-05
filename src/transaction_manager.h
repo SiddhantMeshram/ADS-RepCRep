@@ -17,9 +17,24 @@ class TransactionManager {
     void ProcessInput(const string& file_name);
     vector<int> getSitesforVariables(const string& var);
     void processRead(const vector<string>& params);
+    void processBegin(const vector<string>& params, int timer);
 
     unordered_map<int, shared_ptr<Site>> site_map;
     unordered_map<string, int> variable_to_site_map;
+
+    struct Transaction
+    {
+      string transaction_name;
+      int begin_time;
+      int end_time;
+      vector<int> sites_accessed;
+
+      Transaction(): transaction_name(""), begin_time(0), end_time(INT_MAX), sites_accessed({}) {}
+      Transaction(const string& tn, int bt): transaction_name(tn), begin_time(bt), end_time(INT_MAX), sites_accessed({}) {}
+
+    };
+
+    vector<Transaction> active_transactions;
 
 };
 
