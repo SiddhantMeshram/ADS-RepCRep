@@ -13,7 +13,7 @@ public:
 
     int getLastCommittedTimestamp(const string &variable);
     int getValue(const string &variable);
-    void commitData(const string &variable, int value);
+    void commitData(const string &variable, int value, int time);
     void addVariable(const string &variable, int value);
     void writeLocal(const string &variable,
                     const string &transaction_name,

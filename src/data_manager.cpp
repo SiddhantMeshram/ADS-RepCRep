@@ -24,12 +24,14 @@ int DataManager::getValue(const string &variable) {
     return -1;
 }
 
-void DataManager::commitData(const string &variable, int value) {
-    if (variables.find(variable) != variables.end()) {
-        variables[variable].value = value;
+void DataManager::commitData(const string &variable, int value, int time) {
+    if (variables.find(variable) == variables.end()) {
+        string msg = "Variable not found: " + variable;
+        assert(false && msg.c_str());
     }
 
-    variables[variable].commit_timestamp = 0; // TODO: change 0 to current time counter
+    variables[variable].value = value;
+    variables[variable].commit_timestamp = time; // TODO: change 0 to current time counter
 }
 
 void DataManager::addVariable(const string &variable, int value) {

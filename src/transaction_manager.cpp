@@ -76,11 +76,20 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "W") {
       processWrite(params);
     } else if (command == "fail") {
+      cout << "site " << params[0] << " fails" << endl;
       site_map[stoi(params[0])]->setDown(timer);
     } else if (command == "recover") {
+      cout << "site " << params[0] << " recovers" << endl;
       site_map[stoi(params[0])]->setUp();
     } else if (command == "end") {
-      processEnd(params, timer);
+      if (isSafeToCommit(params, timer)) {
+        cout << params[0] << " commits" << endl;
+        // Commit.
+        processCommit(params[0], timer);
+      } else {
+        cout << params[0] << " aborts" << endl;
+        // Abort.
+      }
     } else if (command == "dump") {
       dump();
     } else {
@@ -98,15 +107,13 @@ void TransactionManager::processRead(const vector<string>& params) {
     if (site_map[ii]->isUp()) {
       // from active_transactions find params[0] say t
       Transaction t;
-      bool transaction_found = false;
-      for(auto transaction : active_transactions){
-        if(transaction.transaction_name == params[0]){
-          t = transaction;
-          transaction_found = true;
-          break;
-        }
+      if (active_transactions.find(params[0]) == active_transactions.end()) {
+        cout << "Unable to find this transaction in active transactions: "
+             << params[0] << endl;
+        return;
       }
-      if(transaction_found == false) cout << "Expected Transaction" << endl; 
+
+      t = active_transactions[params[0]];
       if((site_map[ii]->last_down() < t.begin_time) && (site_map[ii]-> getLastCommittedTimestamp(params[1]) < t.begin_time)){
         cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
         break;
@@ -119,7 +126,7 @@ void TransactionManager::processRead(const vector<string>& params) {
 
 void TransactionManager::processBegin(const vector<string>& params, int timer) {
   Transaction newTransaction(params[0], timer);
-  active_transactions.push_back(newTransaction);
+  active_transactions[params[0]] = newTransaction;
 }
 
 void TransactionManager::processWrite(const vector<string>& params) {
@@ -129,17 +136,29 @@ void TransactionManager::processWrite(const vector<string>& params) {
   int value = stoi(params[2]);
   vector<int> sites = getSitesforVariables(params[1]);
   bool no_writes = true;
+  vector<int> sites_accessed_for_curr_write;
   for (int ii : sites) {
     if (site_map[ii]->isUp()) {
       site_map[ii]->writeLocal(var, txn_name, value);
+      sites_accessed_for_curr_write.push_back(ii);
+      active_transactions[txn_name].sites_accessed.insert(ii);
+      active_transactions[txn_name].variables_acessed.insert(var);
       no_writes = false;
     }
   }
 
   // TODO: Check what needs to be done if no site was up when a write came.
   if (no_writes) {
-
+    cout << "No writes happened for variable: " << var << endl;
+    return;
   }
+
+  string ret;
+  for (int ii : sites_accessed_for_curr_write) {
+    ret += site_map[ii]->getName() + " ";
+  }
+
+  cout << "Variable: " << var << " written on sites: " << ret;
 }
 
 void TransactionManager::dump() {
@@ -148,20 +167,15 @@ void TransactionManager::dump() {
   }
 }
 
-void TransactionManager::processEnd(const vector<string>& params, int timer) {
+bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer) {
   Transaction endTransaction;
-  bool found = false;
-  for(auto transaction: active_transactions){
-    if(transaction.transaction_name == params[0]){
-      endTransaction = transaction;
-      found = true;
-      break;
-    }
-  }
-  if(!found){
-    cout << "Transaction to end has not been found" << endl; 
+  if (active_transactions.find(params[0]) == active_transactions.end()) {
+    cout << "Unable to find this transaction in active transactions: "
+          << params[0] << endl;
+    return false;
   }
 
+  endTransaction = active_transactions[params[0]];
   bool is_safe = true;
 
   // 1st Safety Check: Available Copies Safe
@@ -184,7 +198,14 @@ void TransactionManager::processEnd(const vector<string>& params, int timer) {
     }
   }
 
+  return true;
+}
 
+void TransactionManager::processCommit(const string& txn_name, int time) {
+
+  for (auto site: active_transactions[txn_name].sites_accessed) {
+    site_map[site]->commitData(txn_name, time);
+  }
 }
 
 int main(int argc, char *argv[]) {

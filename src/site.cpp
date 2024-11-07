@@ -13,15 +13,25 @@ void Site::writeLocal(const string &variable, const string &transaction_name, in
     data_manager.writeLocal(variable, transaction_name, value);
 }
 
-void Site::commitData(const string &transaction_name) {
+void Site::commitData(const string &transaction_name, int time) {
 
-    vector<string> variables_to_commit = {}; // TODO: get all the variables that need to be committed when this transaction ends
-
-    for (const auto &variable : variables_to_commit) {
-        int value = -1; // TODO: Get value from local
-        data_manager.commitData(variable, value);
+    unordered_map<string, int> variables_to_commit = getVariablesForTxn(transaction_name);
+    for (const auto &kv : variables_to_commit) {
+        data_manager.commitData(kv.first, kv.second, time);
     }
-   
+}
+
+unordered_map<string, int> Site::getVariablesForTxn(const string& txn_name) {
+
+    unordered_map<string, int> ret;
+    for (const auto& kv : data_manager.variables) {
+        if (kv.second.transaction_to_local_writes_map.find(txn_name) !=
+            kv.second.transaction_to_local_writes_map.end()) {
+            ret[kv.first] = kv.second.transaction_to_local_writes_map.at(txn_name);
+        }
+    }
+
+    return ret;
 }
 
 int Site::getLastCommittedTimestamp(const std::string &variable) {
