@@ -214,7 +214,7 @@ void TransactionManager::processWrite(const vector<string>& params) {
     ret += site_map[ii]->getName() + " ";
   }
 
-  cout << "Variable: " << var << " written on sites: " << ret;
+  cout << "Variable: " << var << " written on sites: " << ret << endl;
 }
 
 void TransactionManager::dump() {
