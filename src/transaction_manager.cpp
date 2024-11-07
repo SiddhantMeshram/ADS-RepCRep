@@ -89,6 +89,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
       } else {
         cout << params[0] << " aborts" << endl;
         // Abort.
+        processAbort(params[0], timer);
       }
     } else if (command == "dump") {
       dump();
@@ -98,6 +99,61 @@ void TransactionManager::ProcessInput(const string& file_name) {
   }
 
   input.close();
+}
+
+
+void TransactionManager::addEdge(const string& source, const string& target, const string& type){
+  Edge e(target, type);
+  serialization_graph[source].push_back(e);
+}
+
+bool TransactionManager::hasTwoRwCycle(){
+
+  unordered_map<string, bool> visited;
+  unordered_map<string, bool> stack;
+  vector<pair<string, string>> pathEdges;
+
+  for (auto node : serialization_graph) {
+      if (detectCycle(node.first, visited, stack, pathEdges)) {
+          return true;
+      }
+  }
+  return false;
+
+}
+
+bool TransactionManager::detectCycle(string node, unordered_map<string, bool>& visited, unordered_map<string, bool>& stack, vector<pair<string, string>>& pathEdges) {
+  if(!visited[node]){
+    visited[node] = true;
+    stack[node] = true;
+
+    for(auto edge: serialization_graph[node]){
+      pathEdges.push_back({node, edge.edge_type});
+
+      if(!visited[edge.target] && detectCycle(edge.target, visited, stack, pathEdges)){
+        return true;
+      }
+      else if(stack[edge.target]){
+        //Cycle detected, now check for consecutive "rw" edges in the cycle
+        auto cycleStart = pathEdges.end();
+        for (auto it = pathEdges.begin(); it != pathEdges.end(); ++it) {
+          if (it->first == edge.target) {
+            cycleStart = it;
+            break;
+          }
+        }
+
+        for (auto it = cycleStart; it != pathEdges.end() - 1; ++it) {
+          if (it->second == "rw" && (it + 1)->second == "rw") {
+            return true; 
+          }
+        }
+      }
+    }
+    pathEdges.pop_back();
+  }
+  stack[node] = false;
+  return false;
 }
 
 void TransactionManager::processRead(const vector<string>& params) {
@@ -142,7 +198,7 @@ void TransactionManager::processWrite(const vector<string>& params) {
       site_map[ii]->writeLocal(var, txn_name, value);
       sites_accessed_for_curr_write.push_back(ii);
       active_transactions[txn_name].sites_accessed.insert(ii);
-      active_transactions[txn_name].variables_acessed.insert(var);
+      active_transactions[txn_name].variables_accessed.insert(var);
       no_writes = false;
     }
   }
@@ -169,6 +225,7 @@ void TransactionManager::dump() {
 
 bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer) {
   Transaction endTransaction;
+
   if (active_transactions.find(params[0]) == active_transactions.end()) {
     cout << "Unable to find this transaction in active transactions: "
           << params[0] << endl;
@@ -176,6 +233,8 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
   }
 
   endTransaction = active_transactions[params[0]];
+  endTransaction.end_time = timer;
+
   bool is_safe = true;
 
   // 1st Safety Check: Available Copies Safe
@@ -187,7 +246,7 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
   }
 
   // 2nd Safety Check: Snapshot Isolation Safe
-  for(auto variable: endTransaction.variables_acessed){
+  for(auto variable: endTransaction.variables_accessed){
     vector<int> sites = getSitesforVariables(variable);
     for(int site: sites){
       int last_commit = site_map[site] -> getLastCommittedTimestamp(variable);
@@ -198,15 +257,67 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
     }
   }
 
-  return true;
+  // 3rd Safety check: Acyclic Serialization Graph
+  for(auto transaction: active_transactions){
+    if(endTransaction.transaction_name == transaction.second.transaction_name) continue;
+
+    // adding "ww" edges
+    for(auto var: transaction.second.variables_accessed){
+      // Check if both transactions access variable var
+      if(find(endTransaction.variables_accessed.begin(), endTransaction.variables_accessed.end(), var) !=  endTransaction.variables_accessed.end()){
+        // Check transaction commits before endTransaction begins
+        if(transaction.second.commit_time < endTransaction.begin_time){
+          addEdge(transaction.second.transaction_name, endTransaction.transaction_name, "ww");
+        }
+      }
+    }
+
+    // adding "wr" edges
+    for(auto var: transaction.second.variables_accessed){
+      if(find(endTransaction.variables_accessed_for_read.begin(), endTransaction.variables_accessed_for_read.end(), var) !=  endTransaction.variables_accessed_for_read.end()){
+        // Check transaction commits before endTransaction begins
+        if(transaction.second.commit_time < endTransaction.begin_time){
+          addEdge(transaction.second.transaction_name, endTransaction.transaction_name, "wr");
+        }
+      }
+    }
+    
+    // adding "rw" edges
+    for(auto var: transaction.second.variables_accessed_for_read){
+      if(find(endTransaction.variables_accessed.begin(), endTransaction.variables_accessed.end(), var) !=  endTransaction.variables_accessed.end()){
+        // Check transaction begins before end time of endTransaction
+        if(transaction.second.begin_time < endTransaction.end_time){
+          addEdge(transaction.second.transaction_name, endTransaction.transaction_name, "rw");
+        }
+      }
+    }
+
+  }
+
+  if(hasTwoRwCycle()) is_safe = false;
+
+
+  return is_safe;
 }
+
+  
+
+
 
 void TransactionManager::processCommit(const string& txn_name, int time) {
 
   for (auto site: active_transactions[txn_name].sites_accessed) {
     site_map[site]->commitData(txn_name, time);
   }
+
+  active_transactions[txn_name].commit_time = time;
 }
+
+void TransactionManager::processAbort(const string& txn_name, int time) {
+
+ 
+}
+
 
 int main(int argc, char *argv[]) {
 
