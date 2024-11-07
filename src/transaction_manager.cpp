@@ -80,7 +80,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "recover") {
       site_map[stoi(params[0])]->setUp();
     } else if (command == "end") {
-
+      processEnd(params, timer);
     } else if (command == "dump") {
       dump();
     } else {
@@ -146,6 +146,45 @@ void TransactionManager::dump() {
   for (auto& kv : site_map) {
     cout << (kv.second)->getName() << " - " << (kv.second)->getDump() << endl;
   }
+}
+
+void TransactionManager::processEnd(const vector<string>& params, int timer) {
+  Transaction endTransaction;
+  bool found = false;
+  for(auto transaction: active_transactions){
+    if(transaction.transaction_name == params[0]){
+      endTransaction = transaction;
+      found = true;
+      break;
+    }
+  }
+  if(!found){
+    cout << "Transaction to end has not been found" << endl; 
+  }
+
+  bool is_safe = true;
+
+  // 1st Safety Check: Available Copies Safe
+  for(auto site: endTransaction.sites_accessed){
+    if(site_map[site] -> last_down() > endTransaction.begin_time){
+      is_safe = false;
+      break;
+    }
+  }
+
+  // 2nd Safety Check: Snapshot Isolation Safe
+  for(auto variable: endTransaction.variables_acessed){
+    vector<int> sites = getSitesforVariables(variable);
+    for(int site: sites){
+      int last_commit = site_map[site] -> getLastCommittedTimestamp(variable);
+      if(last_commit > endTransaction.begin_time){
+        is_safe = false;
+        break;
+      }
+    }
+  }
+
+
 }
 
 int main(int argc, char *argv[]) {
