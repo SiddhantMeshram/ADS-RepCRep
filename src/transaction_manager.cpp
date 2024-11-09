@@ -149,8 +149,9 @@ bool TransactionManager::detectCycle(string node, unordered_map<string, bool>& v
           }
         }
       }
+      pathEdges.pop_back();
     }
-    pathEdges.pop_back();
+    
   }
   stack[node] = false;
   return false;
@@ -172,6 +173,7 @@ void TransactionManager::processRead(const vector<string>& params) {
       t = active_transactions[params[0]];
       if((site_map[ii]->last_down() < t.begin_time) && (site_map[ii]-> getLastCommittedTimestamp(params[1]) < t.begin_time)){
         cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
+        active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
         break;
       }
     }
