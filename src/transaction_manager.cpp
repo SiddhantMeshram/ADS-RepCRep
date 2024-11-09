@@ -104,7 +104,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
 
 void TransactionManager::addEdge(const string& source, const string& target, const string& type){
   Edge e(target, type);
-  serialization_graph[source].push_back(e);
+  temp_graph[source].push_back(e);
 }
 
 bool TransactionManager::hasTwoRwCycle(){
@@ -113,7 +113,7 @@ bool TransactionManager::hasTwoRwCycle(){
   unordered_map<string, bool> stack;
   vector<pair<string, string>> pathEdges;
 
-  for (auto node : serialization_graph) {
+  for (auto node : temp_graph) {
       if (detectCycle(node.first, visited, stack, pathEdges)) {
           return true;
       }
@@ -127,7 +127,7 @@ bool TransactionManager::detectCycle(string node, unordered_map<string, bool>& v
     visited[node] = true;
     stack[node] = true;
 
-    for(auto edge: serialization_graph[node]){
+    for(auto edge: temp_graph[node]){
       pathEdges.push_back({node, edge.edge_type});
 
       if(!visited[edge.target] && detectCycle(edge.target, visited, stack, pathEdges)){
@@ -310,11 +310,14 @@ void TransactionManager::processCommit(const string& txn_name, int time) {
     site_map[site]->commitData(txn_name, time);
   }
 
+  serialization_graph = temp_graph;
+
   active_transactions[txn_name].commit_time = time;
 }
 
 void TransactionManager::processAbort(const string& txn_name, int time) {
 
+  temp_graph = serialization_graph;
  
 }
 

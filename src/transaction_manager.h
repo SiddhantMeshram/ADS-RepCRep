@@ -56,6 +56,7 @@ class TransactionManager {
     };
 
     unordered_map<string, vector<Edge>> serialization_graph;
+    unordered_map<string, vector<Edge>> temp_graph;
 
     void addEdge(const string& source, const string& target, const string& type);
     bool hasTwoRwCycle();
