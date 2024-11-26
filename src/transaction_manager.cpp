@@ -216,7 +216,8 @@ void TransactionManager::processWrite(const vector<string>& params) {
     ret += site_map[ii]->getName() + " ";
   }
 
-  cout << "Variable: " << var << " written on sites: " << ret << endl;
+  cout << "Transaction: " << txn_name << " Variable: " << var
+       << " written with value: " << value << " on sites: " << ret << endl;
 }
 
 void TransactionManager::dump() {
@@ -237,13 +238,10 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
   endTransaction = active_transactions[params[0]];
   endTransaction.end_time = timer;
 
-  bool is_safe = true;
-
   // 1st Safety Check: Available Copies Safe
   for(auto site: endTransaction.sites_accessed){
     if(site_map[site] -> last_down() > endTransaction.begin_time){
-      is_safe = false;
-      break;
+      return false;
     }
   }
 
@@ -253,8 +251,7 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
     for(int site: sites){
       int last_commit = site_map[site] -> getLastCommittedTimestamp(variable);
       if(last_commit > endTransaction.begin_time){
-        is_safe = false;
-        break;
+        return false;
       }
     }
   }
@@ -296,10 +293,10 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
 
   }
 
-  if(hasTwoRwCycle()) is_safe = false;
+  if(hasTwoRwCycle()) return false;
 
 
-  return is_safe;
+  return true;
 }
 
   
