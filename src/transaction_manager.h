@@ -22,7 +22,7 @@ class TransactionManager {
     void processWrite(const vector<string>& params);
     bool isSafeToCommit(const vector<string>& params, int timer);
     void processCommit(const string& txn_name, int time);
-    void processAbort(const string& txn_name, int time);
+    void processAbort(const string& txn_name);
     void dump();
 
     map<int, shared_ptr<Site>> site_map;

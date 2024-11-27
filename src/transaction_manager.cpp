@@ -87,9 +87,8 @@ void TransactionManager::ProcessInput(const string& file_name) {
         // Commit.
         processCommit(params[0], timer);
       } else {
-        cout << params[0] << " aborts" << endl;
         // Abort.
-        processAbort(params[0], timer);
+        processAbort(params[0]);
       }
     } else if (command == "dump") {
       dump();
@@ -160,9 +159,11 @@ bool TransactionManager::detectCycle(string node, unordered_map<string, bool>& v
 void TransactionManager::processRead(const vector<string>& params) {
 
   vector<int> sites = getSitesforVariables(params[1]);
+  bool no_site_up = true;
   for (int ii : sites) {
     if (site_map[ii]->isUp()) {
       // from active_transactions find params[0] say t
+      no_site_up = false;
       Transaction t;
       if (active_transactions.find(params[0]) == active_transactions.end()) {
         cout << "Unable to find this transaction in active transactions: "
@@ -171,14 +172,31 @@ void TransactionManager::processRead(const vector<string>& params) {
       }
 
       t = active_transactions[params[0]];
-      if((site_map[ii]->last_down() < t.begin_time) && (site_map[ii]-> getLastCommittedTimestamp(params[1]) < t.begin_time)){
+
+      // If the site failed between the last commit recorded on that site and
+      // the time t began, we can't read from that site unless a commit happens.
+      if (site_map[ii]->getLastCommittedTimestamp(params[1]) < site_map[ii]->last_down() &&
+          site_map[ii]->last_down() < t.begin_time) {
+        continue;
+      }
+
+      if((site_map[ii]->last_down() < t.begin_time || sites.size() == 1) &&
+         (site_map[ii]-> getLastCommittedTimestamp(params[1]) < t.begin_time)){
         cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
         active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
-        break;
+        return;
       }
     }
   }
 
+  if (no_site_up) {
+    // TODO: Need to wait.
+  }
+
+  // If we come here, some site was up but each site failed between the last
+  // commit recorded on that site and the time transaction began. In this case,
+  // we need to abort.
+  processAbort(params[0]);
   return;
 }
 
@@ -314,10 +332,10 @@ void TransactionManager::processCommit(const string& txn_name, int time) {
   active_transactions[txn_name].commit_time = time;
 }
 
-void TransactionManager::processAbort(const string& txn_name, int time) {
+void TransactionManager::processAbort(const string& txn_name) {
 
+  cout << txn_name << " aborts" << endl;
   temp_graph = serialization_graph;
- 
 }
 
 
