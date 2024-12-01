@@ -4,8 +4,8 @@
 
 Site::Site(const int &index) : site_index(index), name("site " + to_string(site_index)), status(true), last_down_timestamp(0) {}
 
-int Site::readData(const string &variable) {
-     return data_manager.getValue(variable);
+int Site::readData(const string &variable, int time) {
+     return data_manager.getValue(variable, time);
 }
 
 void Site::writeLocal(const string &variable, const string &transaction_name, int value) {
@@ -34,8 +34,8 @@ unordered_map<string, int> Site::getVariablesForTxn(const string& txn_name) {
     return ret;
 }
 
-int Site::getLastCommittedTimestamp(const std::string &variable) {
-    return data_manager.getLastCommittedTimestamp(variable);
+int Site::getLastCommittedTimestamp(const std::string &variable, int time) {
+    return data_manager.getLastCommittedTimestamp(variable, time);
 }
 
 bool Site::isUp() {

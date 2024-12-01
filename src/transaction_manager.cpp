@@ -175,14 +175,14 @@ void TransactionManager::processRead(const vector<string>& params) {
 
       // If the site failed between the last commit recorded on that site and
       // the time t began, we can't read from that site unless a commit happens.
-      if (site_map[ii]->getLastCommittedTimestamp(params[1]) < site_map[ii]->last_down() &&
+      if (site_map[ii]->getLastCommittedTimestamp(params[1], t.begin_time) < site_map[ii]->last_down() &&
           site_map[ii]->last_down() < t.begin_time) {
         continue;
       }
 
       if((site_map[ii]->last_down() < t.begin_time || sites.size() == 1) &&
-         (site_map[ii]-> getLastCommittedTimestamp(params[1]) < t.begin_time)){
-        cout << params[1] << ": " << site_map[ii]->readData(params[1]) << endl;
+         (site_map[ii]-> getLastCommittedTimestamp(params[1], t.begin_time) < t.begin_time)){
+        cout << params[1] << ": " << site_map[ii]->readData(params[1], t.begin_time) << endl;
         active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
         return;
       }
@@ -267,7 +267,7 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
   for(auto variable: endTransaction.variables_accessed){
     vector<int> sites = getSitesforVariables(variable);
     for(int site: sites){
-      int last_commit = site_map[site] -> getLastCommittedTimestamp(variable);
+      int last_commit = site_map[site] -> getLastCommittedTimestamp(variable, endTransaction.begin_time);
       if(last_commit > endTransaction.begin_time){
         return false;
       }

@@ -8,20 +8,39 @@ DataManager::DataManager() {
 
 }
 
-int DataManager::getLastCommittedTimestamp(const string &variable) {
+pair<int, int> DataManager::getLastCommitted(const string& variable, int time) {
+    
+    pair<int, int> ret = {-1, -1};
+    if (variables.find(variable) == variables.end()) {
+        return ret;
+    }
+
+    for (auto p : variables[variable].value_vec) {
+        if (p.second >= time) {
+            break;
+        }
+
+        ret = p;
+    }
+
+    return ret;
+}
+
+int DataManager::getLastCommittedTimestamp(const string &variable, int time) {
     
     if (variables.find(variable) != variables.end()) {
-        return variables[variable].commit_timestamp;
+        return getLastCommitted(variable, time).second;
     }
     return 0;
     
 }
 
-int DataManager::getValue(const string &variable) {
+int DataManager::getValue(const string &variable, int time) {
+    
     if (variables.find(variable) != variables.end()) {
-        return variables[variable].value;
+        return getLastCommitted(variable, time).first;
     }
-    return -1;
+    return 0;
 }
 
 void DataManager::commitData(const string &variable, int value, int time) {
@@ -30,8 +49,7 @@ void DataManager::commitData(const string &variable, int value, int time) {
         assert(false && msg.c_str());
     }
 
-    variables[variable].value = value;
-    variables[variable].commit_timestamp = time; // TODO: change 0 to current time counter
+    variables[variable].value_vec.push_back({value, time});
 }
 
 void DataManager::addVariable(const string &variable, int value) {
@@ -54,7 +72,7 @@ string DataManager::getDump() {
 
     vector<pair<string, int>> vec;
     for (auto& kv : variables) {
-        vec.push_back({kv.first, kv.second.value});
+        vec.push_back({kv.first, kv.second.getValue()});
     }
 
     sort(vec.begin(), vec.end(), dumpCompare);
