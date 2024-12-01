@@ -19,7 +19,7 @@ class TransactionManager {
     vector<int> getSitesforVariables(const string& var);
     void processRead(const vector<string>& params);
     void processBegin(const vector<string>& params, int timer);
-    void processWrite(const vector<string>& params);
+    void processWrite(const vector<string>& params, int timer);
     bool isSafeToCommit(const vector<string>& params, int timer);
     void processCommit(const string& txn_name, int time);
     void processAbort(const string& txn_name);
@@ -34,7 +34,7 @@ class TransactionManager {
       int begin_time;
       int end_time;
       int commit_time;
-      unordered_set<int> sites_accessed;
+      unordered_map<int, int> sites_accessed;
       unordered_set<string> variables_accessed;
       unordered_set<string> variables_accessed_for_read;
 

@@ -74,7 +74,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "R") {
       processRead(params);
     } else if (command == "W") {
-      processWrite(params);
+      processWrite(params, timer);
     } else if (command == "fail") {
       cout << "site " << params[0] << " fails" << endl;
       site_map[stoi(params[0])]->setDown(timer);
@@ -205,7 +205,7 @@ void TransactionManager::processBegin(const vector<string>& params, int timer) {
   active_transactions[params[0]] = newTransaction;
 }
 
-void TransactionManager::processWrite(const vector<string>& params) {
+void TransactionManager::processWrite(const vector<string>& params, int timer) {
 
   const string& txn_name = params[0];
   const string& var = params[1];
@@ -217,7 +217,7 @@ void TransactionManager::processWrite(const vector<string>& params) {
     if (site_map[ii]->isUp()) {
       site_map[ii]->writeLocal(var, txn_name, value);
       sites_accessed_for_curr_write.push_back(ii);
-      active_transactions[txn_name].sites_accessed.insert(ii);
+      active_transactions[txn_name].sites_accessed.insert({ii, timer});
       active_transactions[txn_name].variables_accessed.insert(var);
       no_writes = false;
     }
@@ -257,8 +257,8 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
   endTransaction.end_time = timer;
 
   // 1st Safety Check: Available Copies Safe
-  for(auto site: endTransaction.sites_accessed){
-    if(site_map[site] -> last_down() > endTransaction.begin_time){
+  for(auto [site, earliest_access_time]: endTransaction.sites_accessed){
+    if(site_map[site] -> last_down() > earliest_access_time){
       return false;
     }
   }
@@ -323,7 +323,7 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
 
 void TransactionManager::processCommit(const string& txn_name, int time) {
 
-  for (auto site: active_transactions[txn_name].sites_accessed) {
+  for (auto [site, earliest_access_time]: active_transactions[txn_name].sites_accessed) {
     site_map[site]->commitData(txn_name, time);
   }
 
