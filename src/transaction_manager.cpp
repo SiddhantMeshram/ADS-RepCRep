@@ -81,6 +81,9 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "recover") {
       processRecover(stoi(params[0]));
     } else if (command == "end") {
+      if(active_transactions[params[0]].isaborted){
+        continue;
+      }
       if (isSafeToCommit(params, timer)) {
         cout << params[0] << " commits" << endl;
         // Commit.
@@ -214,6 +217,7 @@ void TransactionManager::processRead(vector<string> params, int timer) {
          (site_map[ii]-> getLastCommittedTimestamp(params[1], t.begin_time) < t.begin_time)){
         cout << params[1] << ": " << site_map[ii]->readData(params[1], t.begin_time) << endl;
         active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
+        active_transactions[params[0]].sites_accessed.insert({ii, timer});
         return;
       }
     } else {
@@ -372,6 +376,7 @@ void TransactionManager::processCommit(const string& txn_name, int time) {
 void TransactionManager::processAbort(const string& txn_name) {
 
   cout << txn_name << " aborts" << endl;
+  active_transactions[txn_name].isaborted = true;
   temp_graph = serialization_graph;
 }
 

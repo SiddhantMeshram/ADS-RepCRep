@@ -58,12 +58,13 @@ class TransactionManager {
       int begin_time;
       int end_time;
       int commit_time;
+      bool isaborted;
       unordered_map<int, int> sites_accessed;
       unordered_set<string> variables_accessed;
       unordered_set<string> variables_accessed_for_read;
 
-      Transaction(): transaction_name(""), begin_time(0), end_time(INT_MAX), sites_accessed({}) {}
-      Transaction(const string& tn, int bt): transaction_name(tn), begin_time(bt), end_time(INT_MAX), sites_accessed({}) {}
+      Transaction(): transaction_name(""), begin_time(0), end_time(INT_MAX), isaborted(false), sites_accessed({}) {}
+      Transaction(const string& tn, int bt): transaction_name(tn), begin_time(bt), end_time(INT_MAX), isaborted(false), sites_accessed({}) {}
 
     };
 
