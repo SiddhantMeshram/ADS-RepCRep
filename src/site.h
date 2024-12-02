@@ -7,7 +7,7 @@
 class Site {
 public:
     Site(const int& index);
-    int readData(const std::string &variable, int time);
+    int readData(const std::string &variable, const string& txn_name, int time);
     void writeLocal(const std::string &variable, const std::string &transaction_name, int value); 
     void commitData(const std::string &transaction_name, int time); 
     void addVariable(const std::string &variable, int value);

@@ -35,9 +35,14 @@ int DataManager::getLastCommittedTimestamp(const string &variable, int time) {
     
 }
 
-int DataManager::getValue(const string &variable, int time) {
+int DataManager::getValue(const string &variable, const string& txn_name, int time) {
     
     if (variables.find(variable) != variables.end()) {
+        // If there is a write performed by this transaction, then we should read
+        // from that uncommitted transaction.
+        if (variables[variable].transaction_to_local_writes_map.count(txn_name)) {
+            return variables[variable].transaction_to_local_writes_map[txn_name];
+        }
         return getLastCommitted(variable, time).first;
     }
     return 0;

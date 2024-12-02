@@ -79,7 +79,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
       cout << "site " << params[0] << " fails" << endl;
       site_map[stoi(params[0])]->setDown(timer);
     } else if (command == "recover") {
-      processRecover(stoi(params[0]));
+      processRecover(stoi(params[0]), timer);
     } else if (command == "end") {
       if(active_transactions[params[0]].isaborted){
         continue;
@@ -102,7 +102,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
   input.close();
 }
 
-void TransactionManager::processRecover(int site) {
+void TransactionManager::processRecover(int site, int timer) {
 
   cout << "site " << site << " recovers" << endl;
   site_map[site]->setUp();
@@ -111,12 +111,13 @@ void TransactionManager::processRecover(int site) {
     return;
   }
 
+  cout << "Processing waiting reads on site: " << site_map[site]->getName() << endl;
   for (auto req : recovery_map[site]) {
     if (already_recovered_set.find(req) != already_recovered_set.end()) {
       continue;
     }
 
-    processReadAfterRecovery(req, site);
+    readData(site, req[0], req[1], timer);
   }
 
   recovery_map.erase(site);
@@ -186,16 +187,13 @@ bool TransactionManager::analyzeCycle(const vector<string>& cycle, const string&
     return false;
 }
 
-void TransactionManager::processReadAfterRecovery(vector<string> params, int site) {
-  
-  vector<int> sites = getSitesforVariables(params[1]);
-  Transaction t = active_transactions[params[0]];
-  if((site_map[site]->last_down() > t.begin_time || sites.size() == 1) &&
-      (site_map[site]-> getLastCommittedTimestamp(params[1], t.begin_time) < t.begin_time)){
-    cout << params[1] << ": " << site_map[site]->readData(params[1], t.begin_time) << endl;
-    active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
-  } else {
-    assert(false && "Can't process read"); 
+void TransactionManager::readData(int site, const string& txn_name, const string& var, int timer) {
+
+  Transaction t = active_transactions[txn_name];
+  cout << var << ": " << site_map[site]->readData(var, txn_name, t.begin_time) << endl;
+  active_transactions[txn_name].variables_accessed_for_read.insert(var);
+  if (!active_transactions[txn_name].sites_accessed.count(site)) {
+    active_transactions[txn_name].sites_accessed.insert({site, timer});
   }
 }
 
@@ -218,17 +216,17 @@ void TransactionManager::processRead(vector<string> params, int timer) {
     // the time t began, we can't read from that site unless a commit happens.
     if (site_map[ii]->getLastCommittedTimestamp(params[1], t.begin_time) < site_map[ii]->last_down() &&
         site_map[ii]->last_down() < t.begin_time) {
-      continue;
+      // If it is non-replicated variable, we can return whatever value is
+      // present locally. For replicated variable, we need a commit to happen
+      // for this variable on this site before allowing reads.
+      if (sites.size() != 1) {
+        continue;
+      }
     }
 
     if (site_map[ii]->isUp()) {
-      if((site_map[ii]->last_down() < t.begin_time || sites.size() == 1) &&
-         (site_map[ii]-> getLastCommittedTimestamp(params[1], t.begin_time) < t.begin_time)){
-        cout << params[1] << ": " << site_map[ii]->readData(params[1], t.begin_time) << endl;
-        active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
-        active_transactions[params[0]].sites_accessed.insert({ii, timer});
-        return;
-      }
+      readData(ii, params[0], params[1], timer);
+      return;
     } else {
       sites_down.push_back(ii);
     }
@@ -236,10 +234,13 @@ void TransactionManager::processRead(vector<string> params, int timer) {
 
   if (sites_down.size() > 0) {
     params.push_back(to_string(timer));
+    string ret;
     for (int ii : sites_down) {
       recovery_map[ii].push_back(params);
+      ret += site_map[ii]->getName() + " ";
     }
 
+    cout << "Waiting for sites " << ret << " to recover in order to process read request" << endl;
     return;
   }
 
@@ -267,7 +268,9 @@ void TransactionManager::processWrite(const vector<string>& params, int timer) {
     if (site_map[ii]->isUp()) {
       site_map[ii]->writeLocal(var, txn_name, value);
       sites_accessed_for_curr_write.push_back(ii);
-      active_transactions[txn_name].sites_accessed.insert({ii, timer});
+      if (!active_transactions[txn_name].sites_accessed.count(ii)) {
+        active_transactions[txn_name].sites_accessed.insert({ii, timer});
+      }
       active_transactions[txn_name].variables_accessed.insert(var);
       no_writes = false;
     }

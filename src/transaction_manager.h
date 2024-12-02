@@ -23,8 +23,8 @@ class TransactionManager {
     bool isSafeToCommit(const vector<string>& params, int timer);
     void processCommit(const string& txn_name, int time);
     void processAbort(const string& txn_name);
-    void processRecover(int site);
-    void processReadAfterRecovery(vector<string> params, int site);
+    void processRecover(int site, int timer);
+    void readData(int site, const string& txn_name, const string& var, int timer);
     void dump();
 
     // Custom hash function for std::vector<std::string>
