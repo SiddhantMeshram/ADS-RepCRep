@@ -85,8 +85,8 @@ class TransactionManager {
 
     void addEdge(const string& source, const string& target, const string& type);
     bool hasTwoRwCycle();
-    bool detectCycle(string node, unordered_map<string, bool>& visited, unordered_map<string, bool>& stack, vector<pair<string, string>>& pathEdges);
-
+    bool detectCycle(const string& startNode, const string& currentNode, vector<string>& path);
+    bool analyzeCycle(const vector<string>& cycle, const string& lastEdgeType);
 
 };
 

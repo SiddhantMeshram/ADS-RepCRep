@@ -127,14 +127,13 @@ void TransactionManager::addEdge(const string& source, const string& target, con
   temp_graph[source].push_back(e);
 }
 
+
 bool TransactionManager::hasTwoRwCycle(){
 
-  unordered_map<string, bool> visited;
-  unordered_map<string, bool> stack;
-  vector<pair<string, string>> pathEdges;
+  vector<string> path;
 
   for (auto node : temp_graph) {
-      if (detectCycle(node.first, visited, stack, pathEdges)) {
+      if (detectCycle(node.first, node.first, path)) {
           return true;
       }
   }
@@ -142,39 +141,49 @@ bool TransactionManager::hasTwoRwCycle(){
 
 }
 
-bool TransactionManager::detectCycle(string node, unordered_map<string, bool>& visited, unordered_map<string, bool>& stack, vector<pair<string, string>>& pathEdges) {
-  if(!visited[node]){
-    visited[node] = true;
-    stack[node] = true;
+bool TransactionManager::detectCycle(const string& startNode, const string& currentNode, vector<string>& path) {
 
-    for(auto edge: temp_graph[node]){
-      pathEdges.push_back({node, edge.edge_type});
-
-      if(!visited[edge.target] && detectCycle(edge.target, visited, stack, pathEdges)){
-        return true;
-      }
-      else if(stack[edge.target]){
-        //Cycle detected, now check for consecutive "rw" edges in the cycle
-        auto cycleStart = pathEdges.end();
-        for (auto it = pathEdges.begin(); it != pathEdges.end(); ++it) {
-          if (it->first == edge.target) {
-            cycleStart = it;
-            break;
-          }
+    path.push_back(currentNode);
+    for (const auto& edge : temp_graph[currentNode]) {
+        if (edge.target == startNode && path.size() > 1) {
+            // A cycle is detected
+            if (analyzeCycle(path, edge.edge_type)) {
+                return true;
+            }
+        } else if (std::find(path.begin(), path.end(), edge.target) == path.end()) {
+            if (detectCycle(startNode, edge.target, path)) {
+                return true;
+            }
         }
-
-        for (auto it = cycleStart; it != pathEdges.end() - 1; ++it) {
-          if (it->second == "rw" && (it + 1)->second == "rw") {
-            return true; 
-          }
-        }
-      }
-      pathEdges.pop_back();
     }
-    
-  }
-  stack[node] = false;
-  return false;
+
+    path.pop_back();
+    return false;
+}
+
+bool TransactionManager::analyzeCycle(const vector<string>& cycle, const string& lastEdgeType) {
+
+    vector<string> edgeTypes;
+
+    for (int i = 0; i < cycle.size(); i++) {
+        const string& from = cycle[i];
+        const string& to = cycle[(i + 1) % cycle.size()];
+        for (const auto& edge : temp_graph[from]) {
+            if (edge.target == to) {
+                edgeTypes.push_back(edge.edge_type);
+                break;
+            }
+        }
+    }
+    edgeTypes.push_back(lastEdgeType);
+
+    // Check for consecutive "rw" edges
+    for (int i = 0; i < edgeTypes.size() - 1; i++) {
+        if (edgeTypes[i] == "rw" && edgeTypes[i + 1] == "rw") {
+            return true;
+        }
+    }
+    return false;
 }
 
 void TransactionManager::processReadAfterRecovery(vector<string> params, int site) {
