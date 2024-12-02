@@ -17,16 +17,40 @@ class TransactionManager {
   private:
     void ProcessInput(const string& file_name);
     vector<int> getSitesforVariables(const string& var);
-    void processRead(const vector<string>& params);
+    void processRead(vector<string> params, int timer);
     void processBegin(const vector<string>& params, int timer);
     void processWrite(const vector<string>& params, int timer);
     bool isSafeToCommit(const vector<string>& params, int timer);
     void processCommit(const string& txn_name, int time);
     void processAbort(const string& txn_name);
+    void processRecover(int site);
+    void processReadAfterRecovery(vector<string> params, int site);
     void dump();
+
+    // Custom hash function for std::vector<std::string>
+    struct VectorStringHash {
+        std::size_t operator()(const std::vector<std::string>& vec) const {
+            std::size_t seed = 0;
+            for (const auto& str : vec) {
+                seed ^= std::hash<std::string>()(str) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+            }
+            return seed;
+        }
+    };
+
+    // Custom equality comparator for std::vector<std::string>
+    struct VectorStringEqual {
+        bool operator()(const std::vector<std::string>& a, const std::vector<std::string>& b) const {
+            return a == b;
+        }
+    };
 
     map<int, shared_ptr<Site>> site_map;
     unordered_map<string, int> variable_to_site_map;
+
+    // Map to keep track of requests that are waiting for sites to recover.
+    unordered_map<int, vector<vector<string>>> recovery_map;
+    unordered_set<vector<string>, VectorStringHash, VectorStringEqual> already_recovered_set;
 
     struct Transaction
     {

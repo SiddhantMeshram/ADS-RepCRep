@@ -72,15 +72,14 @@ void TransactionManager::ProcessInput(const string& file_name) {
       processBegin(params, timer);
 
     } else if (command == "R") {
-      processRead(params);
+      processRead(params, timer);
     } else if (command == "W") {
       processWrite(params, timer);
     } else if (command == "fail") {
       cout << "site " << params[0] << " fails" << endl;
       site_map[stoi(params[0])]->setDown(timer);
     } else if (command == "recover") {
-      cout << "site " << params[0] << " recovers" << endl;
-      site_map[stoi(params[0])]->setUp();
+      processRecover(stoi(params[0]));
     } else if (command == "end") {
       if (isSafeToCommit(params, timer)) {
         cout << params[0] << " commits" << endl;
@@ -100,6 +99,25 @@ void TransactionManager::ProcessInput(const string& file_name) {
   input.close();
 }
 
+void TransactionManager::processRecover(int site) {
+
+  cout << "site " << site << " recovers" << endl;
+  site_map[site]->setUp();
+
+  if (recovery_map.find(site) == recovery_map.end()) {
+    return;
+  }
+
+  for (auto req : recovery_map[site]) {
+    if (already_recovered_set.find(req) != already_recovered_set.end()) {
+      continue;
+    }
+
+    processReadAfterRecovery(req, site);
+  }
+
+  recovery_map.erase(site);
+}
 
 void TransactionManager::addEdge(const string& source, const string& target, const string& type){
   Edge e(target, type);
@@ -156,41 +174,60 @@ bool TransactionManager::detectCycle(string node, unordered_map<string, bool>& v
   return false;
 }
 
-void TransactionManager::processRead(const vector<string>& params) {
+void TransactionManager::processReadAfterRecovery(vector<string> params, int site) {
+  
+  vector<int> sites = getSitesforVariables(params[1]);
+  Transaction t = active_transactions[params[0]];
+  if((site_map[site]->last_down() > t.begin_time || sites.size() == 1) &&
+      (site_map[site]-> getLastCommittedTimestamp(params[1], t.begin_time) < t.begin_time)){
+    cout << params[1] << ": " << site_map[site]->readData(params[1], t.begin_time) << endl;
+    active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
+  } else {
+    assert(false && "Can't process read"); 
+  }
+}
+
+void TransactionManager::processRead(vector<string> params, int timer) {
 
   vector<int> sites = getSitesforVariables(params[1]);
-  bool no_site_up = true;
+  vector<int> sites_down;
   for (int ii : sites) {
+    // from active_transactions find params[0] say t
+    Transaction t;
+    if (active_transactions.find(params[0]) == active_transactions.end()) {
+      cout << "Unable to find this transaction in active transactions: "
+            << params[0] << endl;
+      return;
+    }
+
+    t = active_transactions[params[0]];
+
+    // If the site failed between the last commit recorded on that site and
+    // the time t began, we can't read from that site unless a commit happens.
+    if (site_map[ii]->getLastCommittedTimestamp(params[1], t.begin_time) < site_map[ii]->last_down() &&
+        site_map[ii]->last_down() < t.begin_time) {
+      continue;
+    }
+
     if (site_map[ii]->isUp()) {
-      // from active_transactions find params[0] say t
-      no_site_up = false;
-      Transaction t;
-      if (active_transactions.find(params[0]) == active_transactions.end()) {
-        cout << "Unable to find this transaction in active transactions: "
-             << params[0] << endl;
-        return;
-      }
-
-      t = active_transactions[params[0]];
-
-      // If the site failed between the last commit recorded on that site and
-      // the time t began, we can't read from that site unless a commit happens.
-      if (site_map[ii]->getLastCommittedTimestamp(params[1], t.begin_time) < site_map[ii]->last_down() &&
-          site_map[ii]->last_down() < t.begin_time) {
-        continue;
-      }
-
       if((site_map[ii]->last_down() < t.begin_time || sites.size() == 1) &&
          (site_map[ii]-> getLastCommittedTimestamp(params[1], t.begin_time) < t.begin_time)){
         cout << params[1] << ": " << site_map[ii]->readData(params[1], t.begin_time) << endl;
         active_transactions[params[0]].variables_accessed_for_read.insert(params[1]);
         return;
       }
+    } else {
+      sites_down.push_back(ii);
     }
   }
 
-  if (no_site_up) {
-    // TODO: Need to wait.
+  if (sites_down.size() > 0) {
+    params.push_back(to_string(timer));
+    for (int ii : sites_down) {
+      recovery_map[ii].push_back(params);
+    }
+
+    return;
   }
 
   // If we come here, some site was up but each site failed between the last
