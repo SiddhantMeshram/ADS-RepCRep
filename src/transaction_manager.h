@@ -20,12 +20,13 @@ class TransactionManager {
     vector<int> getSitesforVariables(const string& var);
     void processRead(vector<string> params, int timer);
     void processBegin(const vector<string>& params, int timer);
-    void processWrite(const vector<string>& params, int timer);
+    void processWrite(vector<string> params, int timer);
     string isSafeToCommit(const vector<string>& params, int timer);
     void processCommit(const string& txn_name, int time);
     void processAbort(const string& txn_name, string str);
     void processRecover(int site, int timer);
     void readData(int site, const string& txn_name, const string& var, int timer);
+    void writeData(int site, string var, string txn_name, int value, int timer);
     void dump();
 
     // Custom hash function for std::vector<std::string>

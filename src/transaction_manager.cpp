@@ -51,7 +51,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
   string line;
   int timer = 0;
   while (getline(input, line)) {
-    if (line[0] == '/') {
+    if (line[0] == '/' || line.empty()) {
       continue;
     }
     ++timer;
@@ -116,13 +116,18 @@ void TransactionManager::processRecover(int site, int timer) {
     return;
   }
 
-  outFile << "Processing waiting reads on site: " << site_map[site]->getName() << endl;
+  outFile << "Processing waiting requests on site: " << site_map[site]->getName() << endl;
   for (auto req : recovery_map[site]) {
     if (already_recovered_set.find(req) != already_recovered_set.end()) {
       continue;
     }
 
-    readData(site, req[0], req[1], timer);
+    if (req.size() == 3) {
+      // It is a read request.
+      readData(site, req[0], req[1], timer);
+    } else {
+      writeData(site, req[0], req[1], stoi(req[2]), timer);
+    }
   }
 
   recovery_map.erase(site);
@@ -202,6 +207,19 @@ void TransactionManager::readData(int site, const string& txn_name, const string
   }
 }
 
+void TransactionManager::writeData(int site, string txn_name, string var, int value, int timer) {
+
+  site_map[site]->writeLocal(var, txn_name, value);
+  if (!active_transactions[txn_name].sites_accessed.count(site)) {
+    active_transactions[txn_name].sites_accessed.insert({site, timer});
+  }
+  active_transactions[txn_name].variables_accessed.insert(var);
+  
+  outFile << "Transaction: " << txn_name << " Variable: " << var
+          << " written locally with value: " << value << " on sites: "
+          << site_map[site]->getName() << endl;
+}
+
 void TransactionManager::processRead(vector<string> params, int timer) {
 
   vector<int> sites = getSitesforVariables(params[1]);
@@ -261,7 +279,7 @@ void TransactionManager::processBegin(const vector<string>& params, int timer) {
   active_transactions[params[0]] = newTransaction;
 }
 
-void TransactionManager::processWrite(const vector<string>& params, int timer) {
+void TransactionManager::processWrite(vector<string> params, int timer) {
 
   const string& txn_name = params[0];
   const string& var = params[1];
@@ -269,6 +287,7 @@ void TransactionManager::processWrite(const vector<string>& params, int timer) {
   vector<int> sites = getSitesforVariables(params[1]);
   bool no_writes = true;
   vector<int> sites_accessed_for_curr_write;
+  vector<int> sites_down;
   for (int ii : sites) {
     if (site_map[ii]->isUp()) {
       site_map[ii]->writeLocal(var, txn_name, value);
@@ -278,12 +297,20 @@ void TransactionManager::processWrite(const vector<string>& params, int timer) {
       }
       active_transactions[txn_name].variables_accessed.insert(var);
       no_writes = false;
+    } else {
+      sites_down.push_back(ii);
     }
   }
 
-  // TODO: Check what needs to be done if no site was up when a write came.
   if (no_writes) {
-    outFile << "No writes happened for variable: " << var << endl;
+    params.push_back(to_string(timer));
+    string ret;
+    for (int ii : sites_down) {
+      recovery_map[ii].push_back(params);
+      ret += site_map[ii]->getName() + " ";
+    }
+
+    outFile << "Waiting for sites " << ret << " to recover in order to process write request" << endl;
     return;
   }
 
@@ -293,7 +320,8 @@ void TransactionManager::processWrite(const vector<string>& params, int timer) {
   }
 
   outFile << "Transaction: " << txn_name << " Variable: " << var
-       << " written with value: " << value << " on sites: " << ret << endl;
+       << " written locally with value: " << value << " on sites: " << ret
+       << endl;
 }
 
 void TransactionManager::dump() {

@@ -1,5 +1,7 @@
-// Hi
-// Hello
+// Site 1 will not have x8 = 88 commited because
+// it was down. So when T3 tries to read x8, site 1
+// rejects the read and the read request is served by
+// other sites which have the latest value.
 begin(T1)
 begin(T2)
 R(T1,x3)
@@ -8,6 +10,10 @@ W(T2,x8,88)
 R(T2,x3)
 W(T1, x5,91)
 end(T2)
-recover(2)
+recover(1)
+R(T1,x8)
 end(T1)
+begin(T3)
+R(T3,x8)
+end(T3)
 dump()
