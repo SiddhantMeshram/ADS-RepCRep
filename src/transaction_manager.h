@@ -21,9 +21,9 @@ class TransactionManager {
     void processRead(vector<string> params, int timer);
     void processBegin(const vector<string>& params, int timer);
     void processWrite(const vector<string>& params, int timer);
-    bool isSafeToCommit(const vector<string>& params, int timer);
+    string isSafeToCommit(const vector<string>& params, int timer);
     void processCommit(const string& txn_name, int time);
-    void processAbort(const string& txn_name);
+    void processAbort(const string& txn_name, string str);
     void processRecover(int site, int timer);
     void readData(int site, const string& txn_name, const string& var, int timer);
     void dump();

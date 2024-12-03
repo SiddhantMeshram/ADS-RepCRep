@@ -84,13 +84,14 @@ void TransactionManager::ProcessInput(const string& file_name) {
       if(active_transactions[params[0]].isaborted){
         continue;
       }
-      if (isSafeToCommit(params, timer)) {
+      string s = isSafeToCommit(params, timer);
+      if (s.empty()) {
         outFile << params[0] << " commits" << endl;
         // Commit.
         processCommit(params[0], timer);
       } else {
         // Abort.
-        processAbort(params[0]);
+        processAbort(params[0], s);
       }
     } else if (command == "dump") {
       dump();
@@ -248,7 +249,7 @@ void TransactionManager::processRead(vector<string> params, int timer) {
   // If we come here, some site was up but each site failed between the last
   // commit recorded on that site and the time transaction began. In this case,
   // we need to abort.
-  processAbort(params[0]);
+  processAbort(params[0], "No safe site to read");
   return;
 }
 
@@ -298,13 +299,13 @@ void TransactionManager::dump() {
   }
 }
 
-bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer) {
+string TransactionManager::isSafeToCommit(const vector<string>& params, int timer) {
   Transaction endTransaction;
 
   if (active_transactions.find(params[0]) == active_transactions.end()) {
     outFile << "Unable to find this transaction in active transactions: "
           << params[0] << endl;
-    return false;
+    return "No active transactions";
   }
 
   endTransaction = active_transactions[params[0]];
@@ -313,7 +314,7 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
   // 1st Safety Check: Available Copies Safe
   for(auto [site, earliest_access_time]: endTransaction.sites_accessed){
     if(site_map[site] -> last_down() > earliest_access_time){
-      return false;
+      return "Failed Available Copies check";
     }
   }
 
@@ -323,7 +324,7 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
     for(int site: sites){
       int last_commit = site_map[site] -> getLastCommittedTimestamp(variable, endTransaction.begin_time);
       if(last_commit > endTransaction.begin_time){
-        return false;
+        return "Failed Snapshot Isolation check";
       }
     }
   }
@@ -365,10 +366,10 @@ bool TransactionManager::isSafeToCommit(const vector<string>& params, int timer)
 
   }
 
-  if(hasTwoRwCycle()) return false;
+  if(hasTwoRwCycle()) return "RW Cycle Detected";
 
 
-  return true;
+  return "";
 }
 
   
@@ -386,9 +387,10 @@ void TransactionManager::processCommit(const string& txn_name, int time) {
   active_transactions[txn_name].commit_time = time;
 }
 
-void TransactionManager::processAbort(const string& txn_name) {
+void TransactionManager::processAbort(const string& txn_name, string str) {
 
-  outFile << txn_name << " aborts" << endl;
+  outFile << txn_name << " aborts, " << "WHY: " << str  << endl;
+
   active_transactions[txn_name].isaborted = true;
   temp_graph = serialization_graph;
 }
