@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <fstream>
 
 using namespace std;
 
@@ -12,7 +13,7 @@ class Site;
 class TransactionManager {
 
   public:
-    TransactionManager(const string& file_name);
+    TransactionManager(const string& input_file, const string& output_file);
   
   private:
     void ProcessInput(const string& file_name);
@@ -70,6 +71,7 @@ class TransactionManager {
 
 
     unordered_map<string, Transaction> active_transactions;
+    ofstream outFile;
 
     struct Edge
     {
