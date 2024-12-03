@@ -51,6 +51,9 @@ void TransactionManager::ProcessInput(const string& file_name) {
   string line;
   int timer = 0;
   while (getline(input, line)) {
+    if (line[0] == '/') {
+      continue;
+    }
     ++timer;
     string command, var;
     unordered_set<char> delimiters{'(', ')', ','};
