@@ -11,6 +11,7 @@ public:
     void writeLocal(const std::string &variable, const std::string &transaction_name, int value); 
     void commitData(const std::string &transaction_name, int time); 
     void addVariable(const std::string &variable, int value);
+    int getLastCommittedTimestamp(const std::string &variable);
     int getLastCommittedTimestamp(const std::string &variable, int time);
     unordered_map<string, int> getVariablesForTxn(const string& txn_name);
 

@@ -12,6 +12,7 @@ public:
     DataManager();
 
     int getLastCommittedTimestamp(const string &variable, int time);
+    int getLastCommittedTimestamp(const string &variable);
     int getValue(const string &variable, const string& txn_name, int time);
     void commitData(const string &variable, int value, int time);
     void addVariable(const string &variable, int value);

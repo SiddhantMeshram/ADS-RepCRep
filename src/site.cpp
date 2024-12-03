@@ -38,6 +38,10 @@ int Site::getLastCommittedTimestamp(const std::string &variable, int time) {
     return data_manager.getLastCommittedTimestamp(variable, time);
 }
 
+int Site::getLastCommittedTimestamp(const std::string &variable) {
+    return data_manager.getLastCommittedTimestamp(variable);
+}
+
 bool Site::isUp() {
     return status;
 }

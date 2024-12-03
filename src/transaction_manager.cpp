@@ -322,7 +322,7 @@ string TransactionManager::isSafeToCommit(const vector<string>& params, int time
   for(auto variable: endTransaction.variables_accessed){
     vector<int> sites = getSitesforVariables(variable);
     for(int site: sites){
-      int last_commit = site_map[site] -> getLastCommittedTimestamp(variable, endTransaction.begin_time);
+      int last_commit = site_map[site] -> getLastCommittedTimestamp(variable);
       if(last_commit > endTransaction.begin_time){
         return "Failed Snapshot Isolation check";
       }

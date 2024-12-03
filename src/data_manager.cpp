@@ -35,6 +35,15 @@ int DataManager::getLastCommittedTimestamp(const string &variable, int time) {
     
 }
 
+int DataManager::getLastCommittedTimestamp(const string &variable) {
+    
+    if (variables.find(variable) != variables.end()) {
+        return variables[variable].getLastCommitTime();
+    }
+    return 0;
+    
+}
+
 int DataManager::getValue(const string &variable, const string& txn_name, int time) {
     
     if (variables.find(variable) != variables.end()) {
