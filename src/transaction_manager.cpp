@@ -263,7 +263,7 @@ void TransactionManager::processRead(vector<string> params, int timer) {
       ret += site_map[ii]->getName() + " ";
     }
 
-    outFile << "Waiting for sites " << ret << " to recover in order to process read request" << endl;
+    outFile << "Waiting for sites: " << ret << " to recover in order to process read request" << endl;
     return;
   }
 
@@ -397,7 +397,7 @@ string TransactionManager::isSafeToCommit(const vector<string>& params, int time
 
   }
 
-  if(hasTwoRwCycle()) return "RW Cycle Detected";
+  if(hasTwoRwCycle()) return "Cycle with 2 consecutive RW Detected";
 
 
   return "";

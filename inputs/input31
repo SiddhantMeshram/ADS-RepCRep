@@ -1,0 +1,6 @@
+// T1 should read its local value of x3 (44), even if the transaction is aborted
+begin(T1)
+W(T1,x3,44)
+R(T1,x3)
+fail(4)
+end(T1)

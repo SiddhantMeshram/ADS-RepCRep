@@ -1,0 +1,11 @@
+// Waits to Read
+begin(T1)
+begin(T2)
+W(T1,x3,44)
+W(T2,x3,45)
+fail(4)
+R(T1,x3)
+R(T2,x3)
+recover(4)
+end(T1)
+end(T2)
