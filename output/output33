@@ -1,0 +1,11 @@
+site 4 fails
+Waiting for sites site 4  to recover in order to process write request
+Waiting for sites site 4  to recover in order to process write request
+site 4 recovers
+Processing waiting requests on site: site 4
+Transaction: T1 Variable: x3 written locally with value: 44 on sites: site 4
+Transaction: T2 Variable: x3 written locally with value: 45 on sites: site 4
+x3: 44
+x3: 45
+T1 commits
+T2 aborts, WHY: Failed Snapshot Isolation check

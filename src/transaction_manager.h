@@ -29,20 +29,20 @@ class TransactionManager {
     void writeData(int site, string var, string txn_name, int value, int timer);
     void dump();
 
-    // Custom hash function for std::vector<std::string>
+    // Custom hash function for vector<string>.
     struct VectorStringHash {
-        std::size_t operator()(const std::vector<std::string>& vec) const {
-            std::size_t seed = 0;
+        size_t operator()(const vector<string>& vec) const {
+            size_t seed = 0;
             for (const auto& str : vec) {
-                seed ^= std::hash<std::string>()(str) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+                seed ^= hash<string>()(str) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
             }
             return seed;
         }
     };
 
-    // Custom equality comparator for std::vector<std::string>
+    // Custom equality comparator for vector<string>.
     struct VectorStringEqual {
-        bool operator()(const std::vector<std::string>& a, const std::vector<std::string>& b) const {
+        bool operator()(const vector<string>& a, const vector<string>& b) const {
             return a == b;
         }
     };

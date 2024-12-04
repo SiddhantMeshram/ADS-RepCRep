@@ -1,0 +1,22 @@
+// T1 will read the inital value of x2 that is present
+// before T1 begins. T2's read can safely read x2 written by T1 as there
+// was a commit that happened on x2 after site 5 and 6 failed.
+begin(T1)
+fail(1)
+fail(2)
+fail(3)
+fail(4)
+fail(7)
+fail(8)
+fail(9)
+fail(10)
+fail(5)
+recover(5)
+fail(6)
+recover(6)
+R(T1,x2)
+W(T1,x2,55)
+end(T1)
+begin(T2)
+R(T2,x2)
+end(T2)

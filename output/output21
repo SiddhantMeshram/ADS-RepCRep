@@ -1,0 +1,6 @@
+x2: 20
+x4: 40
+Transaction: T1 Variable: x4 written locally with value: 30 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+Transaction: T2 Variable: x2 written locally with value: 90 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+T1 commits
+T2 aborts, WHY: Cycle with 2 consecutive RW Detected

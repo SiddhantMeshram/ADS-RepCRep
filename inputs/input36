@@ -1,0 +1,13 @@
+// T3 should read the original value of x4
+// but for x2, it should read the value it wrote.
+begin(T2)
+begin(T3)
+W(T3,x2,22)
+W(T2,x4,44)
+R(T3,x4)
+R(T3,x2)
+end(T2)
+end(T3)
+begin(T1)
+R(T1,x2)
+end(T1)

@@ -1,0 +1,17 @@
+site 3 fails
+site 4 fails
+x1: 10
+T1 commits
+site 4 recovers
+site 3 recovers
+x3: 30
+T2 commits
+site 1 fails
+site 2 fails
+site 5 fails
+site 6 fails
+site 7 fails
+site 8 fails
+site 9 fails
+site 10 fails
+x3: 30

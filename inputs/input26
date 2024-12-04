@@ -1,3 +1,5 @@
+// T2 should not be able to read the committed x1 value by T1 because it
+// began before that commit.
 begin(T1)
 begin(T2)
 W(T1,x1,101) 

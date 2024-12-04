@@ -1,0 +1,16 @@
+Transaction: T3 Variable: x2 written locally with value: 10 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+Transaction: T1 Variable: x2 written locally with value: 20 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+Transaction: T2 Variable: x2 written locally with value: 30 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+T1 commits
+T3 aborts, WHY: Failed Snapshot Isolation check
+T2 aborts, WHY: Failed Snapshot Isolation check
+site 1 - x2: 20, x4: 40, x6: 60, x8: 80, x10: 100, x12: 120, x14: 140, x16: 160, x18: 180, x20: 200
+site 2 - x1: 10, x2: 20, x4: 40, x6: 60, x8: 80, x10: 100, x11: 110, x12: 120, x14: 140, x16: 160, x18: 180, x20: 200
+site 3 - x2: 20, x4: 40, x6: 60, x8: 80, x10: 100, x12: 120, x14: 140, x16: 160, x18: 180, x20: 200
+site 4 - x2: 20, x3: 30, x4: 40, x6: 60, x8: 80, x10: 100, x12: 120, x13: 130, x14: 140, x16: 160, x18: 180, x20: 200
+site 5 - x2: 20, x4: 40, x6: 60, x8: 80, x10: 100, x12: 120, x14: 140, x16: 160, x18: 180, x20: 200
+site 6 - x2: 20, x4: 40, x5: 50, x6: 60, x8: 80, x10: 100, x12: 120, x14: 140, x15: 150, x16: 160, x18: 180, x20: 200
+site 7 - x2: 20, x4: 40, x6: 60, x8: 80, x10: 100, x12: 120, x14: 140, x16: 160, x18: 180, x20: 200
+site 8 - x2: 20, x4: 40, x6: 60, x7: 70, x8: 80, x10: 100, x12: 120, x14: 140, x16: 160, x17: 170, x18: 180, x20: 200
+site 9 - x2: 20, x4: 40, x6: 60, x8: 80, x10: 100, x12: 120, x14: 140, x16: 160, x18: 180, x20: 200
+site 10 - x2: 20, x4: 40, x6: 60, x8: 80, x9: 90, x10: 100, x12: 120, x14: 140, x16: 160, x18: 180, x19: 190, x20: 200

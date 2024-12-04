@@ -1,0 +1,15 @@
+// T4 should not see the value written by T3 because
+// T4 began before T3 committed.
+begin(T3)
+begin(T2)
+W(T3,x2,22)
+W(T2,x4,44)
+R(T3,x4)
+end(T2)
+begin(T4)
+end(T3)
+begin(T1)
+R(T1,x2)
+R(T4,x2)
+end(T1)
+end(T4)

@@ -1,0 +1,7 @@
+Transaction: T3 Variable: x2 written locally with value: 22 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+Transaction: T2 Variable: x4 written locally with value: 44 on sites: site 1 site 2 site 3 site 4 site 5 site 6 site 7 site 8 site 9 site 10 
+x4: 40
+T2 commits
+T3 commits
+x2: 20
+T1 commits

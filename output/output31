@@ -1,0 +1,4 @@
+Transaction: T1 Variable: x3 written locally with value: 44 on sites: site 4 
+x3: 44
+site 4 fails
+T1 aborts, WHY: Failed Available Copies check

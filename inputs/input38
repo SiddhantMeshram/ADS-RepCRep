@@ -1,0 +1,28 @@
+// T3 should wait for site 6 and site 7 as site 5 crashed between
+// the last commit on it and the time when T3 began. When site 6 recovers
+// the waiting request will get processed. When site 7 recovers, it sees that
+// the waiting read request was already processed when site 6 was recovered
+// and hence the read is not processed again.
+begin(T1)
+fail(1)
+fail(2)
+fail(3)
+fail(4)
+fail(8)
+fail(9)
+fail(10)
+fail(5)
+recover(5)
+begin(T3)
+fail(6)
+fail(7)
+R(T3,x2)
+recover(6)
+recover(7)
+R(T1,x2)
+W(T1,x2,55)
+end(T1)
+begin(T2)
+R(T2,x2)
+end(T2)
+end(T3)

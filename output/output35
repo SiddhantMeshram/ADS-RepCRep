@@ -1,0 +1,17 @@
+site 1 fails
+site 2 fails
+site 3 fails
+site 4 fails
+site 7 fails
+site 8 fails
+site 9 fails
+site 10 fails
+site 5 fails
+site 5 recovers
+site 6 fails
+site 6 recovers
+x2: 20
+Transaction: T1 Variable: x2 written locally with value: 55 on sites: site 5 site 6 
+T1 commits
+x2: 55
+T2 commits

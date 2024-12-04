@@ -128,6 +128,8 @@ void TransactionManager::processRecover(int site, int timer) {
     } else {
       writeData(site, req[0], req[1], stoi(req[2]), timer);
     }
+
+    already_recovered_set.insert(req);
   }
 
   recovery_map.erase(site);
