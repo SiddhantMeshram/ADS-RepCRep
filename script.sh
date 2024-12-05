@@ -2,7 +2,7 @@
 # This script can be used to iterate over all the inputs and create the output.
 
 input_dir="inputs"
-output_dir="output"
+output_dir="outputs"
 
 # Check if the output directory exists, if not, create it
 if [ ! -d "$output_dir" ]; then

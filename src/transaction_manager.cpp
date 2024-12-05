@@ -431,6 +431,11 @@ void TransactionManager::processAbort(const string& txn_name, string str) {
 
 int main(int argc, char *argv[]) {
 
+  if (argc < 3) {
+    cout << "Error: At least 2 arguments are required: ./repcrep <input_file> <output_file>" << endl;
+    return 0;
+  }
+
   TransactionManager tm(argv[1], argv[2]);
   return 0;
 }
