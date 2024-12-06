@@ -20,6 +20,9 @@ graph within this class.
 
 #include <string>
 #include <map>
+#include <vector>
+#include <memory>
+#include <climits>
 
 using namespace std;
 

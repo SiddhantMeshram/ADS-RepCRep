@@ -1,4 +1,5 @@
 #include <cassert>
+#include <algorithm>
 
 #include "data_manager.h"
 
@@ -91,7 +92,7 @@ string DataManager::getDump() {
 
     sort(vec.begin(), vec.end(), dumpCompare);
     string ret;
-    for (int ii = 0; ii < vec.size(); ++ii) {
+    for (size_t ii = 0; ii < vec.size(); ++ii) {
         ret += vec[ii].first + ": " + to_string(vec[ii].second) + ", ";
     }
 

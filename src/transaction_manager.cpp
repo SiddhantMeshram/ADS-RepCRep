@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <cassert>
+#include <algorithm>
 
 #include "transaction_manager.h"
 #include "site.h"
@@ -57,7 +58,7 @@ void TransactionManager::ProcessInput() {
     unordered_set<char> delimiters{'(', ')', ','};
     vector<string> params;
 
-    for (int ii = 0; ii < line.size(); ++ii) {
+    for (size_t ii = 0; ii < line.size(); ++ii) {
         if (delimiters.find(line[ii]) != delimiters.end()) {
             line[ii] = ' ';
         }
@@ -173,7 +174,7 @@ bool TransactionManager::analyzeCycle(const vector<string>& cycle, const string&
 
     vector<string> edgeTypes;
 
-    for (int i = 0; i < cycle.size(); i++) {
+    for (size_t i = 0; i < cycle.size(); i++) {
         const string& from = cycle[i];
         const string& to = cycle[(i + 1) % cycle.size()];
         for (const auto& edge : temp_graph[from]) {
@@ -186,7 +187,7 @@ bool TransactionManager::analyzeCycle(const vector<string>& cycle, const string&
     edgeTypes.push_back(lastEdgeType);
 
     // Check for consecutive "rw" edges
-    for (int i = 0; i < edgeTypes.size() - 1; i++) {
+    for (int i = 0; i < (int) edgeTypes.size() - 1; i++) {
         if (edgeTypes[i] == "rw" && edgeTypes[i + 1] == "rw") {
             return true;
         }

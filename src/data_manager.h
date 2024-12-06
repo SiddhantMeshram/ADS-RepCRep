@@ -15,6 +15,7 @@ Data Manager is used to manage the data stored on a particular site.
 #include <string>
 #include <unordered_map>
 #include <ctime>
+#include <vector>
 
 using namespace std;
 
