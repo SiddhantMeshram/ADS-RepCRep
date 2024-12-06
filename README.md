@@ -17,3 +17,18 @@ provided:
 ```
 ./script.sh
 ```
+We have provided a repro-test.rpz file which is created using reprozip. It
+can be unzipped using
+```
+reprounzip directory setup repro-test.rpz ./unzipped_dir
+```
+
+To run the executable:
+```
+reprounzip directory run ./unzipped_dir
+```
+
+To pass input as a file:
+```
+reprounzip directory run ./unzipped_dir < <input_file>
+```
