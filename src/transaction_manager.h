@@ -4,7 +4,7 @@ Authors:
   Siddhant Meshram (sm10954)
 
 Date:
-  11/25/2024
+  11/18/2024
 
 The Transaction Manager is the top level class that manages all the
 transactions and maintains site data which is used while processing the
@@ -20,7 +20,6 @@ graph within this class.
 
 #include <string>
 #include <map>
-#include <fstream>
 
 using namespace std;
 
@@ -30,12 +29,12 @@ class Site;
 class TransactionManager {
 
   public:
-    TransactionManager(const string& input_file, const string& output_file);
+    TransactionManager();
   
   private:
     // This function reads the ipnut file line by line and calls the
     // appropriate function for processing the request.
-    void ProcessInput(const string& file_name);
+    void ProcessInput();
 
     // Returns a list of sites that host this variable.
     vector<int> getSitesforVariables(const string& var);
@@ -118,9 +117,6 @@ class TransactionManager {
 
     // Map to keep track of all the transactions.
     unordered_map<string, Transaction> active_transactions;
-
-    // All the output will be written to this file.
-    ofstream outFile;
 
     struct Edge
     {

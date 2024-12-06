@@ -10,8 +10,7 @@
 
 using namespace std;
 
-TransactionManager::TransactionManager(const string& input_file,
-                                       const string& output_file) : outFile(output_file) {
+TransactionManager::TransactionManager() {
   
   // Create sites.
   for (int ii = 1; ii <= 10; ++ii) {
@@ -27,7 +26,7 @@ TransactionManager::TransactionManager(const string& input_file,
   }
 
   // Process Input.
-  ProcessInput(input_file);
+  ProcessInput();
 }
 
 vector<int> TransactionManager::getSitesforVariables(const string& var) {
@@ -45,13 +44,12 @@ vector<int> TransactionManager::getSitesforVariables(const string& var) {
   return ret;
 }
 
-void TransactionManager::ProcessInput(const string& file_name) {
+void TransactionManager::ProcessInput() {
 
-  ifstream input(file_name);
   string line;
   int timer = 0;
-  while (getline(input, line)) {
-    if (line[0] == '/' || line.empty()) {
+  while (getline(cin, line)) {
+    if (line.empty() || line[0] == '/') {
       continue;
     }
     ++timer;
@@ -79,7 +77,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
     } else if (command == "W") {
       processWrite(params, timer);
     } else if (command == "fail") {
-      outFile << "site " << params[0] << " fails" << endl;
+      cout << "site " << params[0] << " fails" << endl;
       site_map[stoi(params[0])]->setDown(timer);
     } else if (command == "recover") {
       processRecover(stoi(params[0]), timer);
@@ -89,7 +87,7 @@ void TransactionManager::ProcessInput(const string& file_name) {
       }
       string s = isSafeToCommit(params, timer);
       if (s.empty()) {
-        outFile << params[0] << " commits" << endl;
+        cout << params[0] << " commits" << endl;
         // Commit.
         processCommit(params[0], timer);
       } else {
@@ -102,21 +100,18 @@ void TransactionManager::ProcessInput(const string& file_name) {
       assert(false && "Unexpected command");
     }
   }
-
-  input.close();
-  outFile.close();
 }
 
 void TransactionManager::processRecover(int site, int timer) {
 
-  outFile << "site " << site << " recovers" << endl;
+  cout << "site " << site << " recovers" << endl;
   site_map[site]->setUp();
 
   if (recovery_map.find(site) == recovery_map.end()) {
     return;
   }
 
-  outFile << "Processing waiting requests on site: " << site_map[site]->getName() << endl;
+  cout << "Processing waiting requests on site: " << site_map[site]->getName() << endl;
   for (auto req : recovery_map[site]) {
     if (already_recovered_set.find(req) != already_recovered_set.end()) {
       continue;
@@ -202,7 +197,7 @@ bool TransactionManager::analyzeCycle(const vector<string>& cycle, const string&
 void TransactionManager::readData(int site, const string& txn_name, const string& var, int timer) {
 
   Transaction t = active_transactions[txn_name];
-  outFile << var << ": " << site_map[site]->readData(var, txn_name, t.begin_time) << endl;
+  cout << var << ": " << site_map[site]->readData(var, txn_name, t.begin_time) << endl;
   active_transactions[txn_name].variables_accessed_for_read.insert(var);
   if (!active_transactions[txn_name].sites_accessed.count(site)) {
     active_transactions[txn_name].sites_accessed.insert({site, timer});
@@ -217,7 +212,7 @@ void TransactionManager::writeData(int site, string txn_name, string var, int va
   }
   active_transactions[txn_name].variables_accessed.insert(var);
   
-  outFile << "Transaction: " << txn_name << " Variable: " << var
+  cout << "Transaction: " << txn_name << " Variable: " << var
           << " written locally with value: " << value << " on sites: "
           << site_map[site]->getName() << endl;
 }
@@ -230,7 +225,7 @@ void TransactionManager::processRead(vector<string> params, int timer) {
     // from active_transactions find params[0] say t
     Transaction t;
     if (active_transactions.find(params[0]) == active_transactions.end()) {
-      outFile << "Unable to find this transaction in active transactions: "
+      cout << "Unable to find this transaction in active transactions: "
             << params[0] << endl;
       return;
     }
@@ -265,7 +260,7 @@ void TransactionManager::processRead(vector<string> params, int timer) {
       ret += site_map[ii]->getName() + " ";
     }
 
-    outFile << "Waiting for sites: " << ret << " to recover in order to process read request" << endl;
+    cout << "Waiting for sites: " << ret << " to recover in order to process read request" << endl;
     return;
   }
 
@@ -312,7 +307,7 @@ void TransactionManager::processWrite(vector<string> params, int timer) {
       ret += site_map[ii]->getName() + " ";
     }
 
-    outFile << "Waiting for sites " << ret << " to recover in order to process write request" << endl;
+    cout << "Waiting for sites " << ret << " to recover in order to process write request" << endl;
     return;
   }
 
@@ -321,14 +316,14 @@ void TransactionManager::processWrite(vector<string> params, int timer) {
     ret += site_map[ii]->getName() + " ";
   }
 
-  outFile << "Transaction: " << txn_name << " Variable: " << var
+  cout << "Transaction: " << txn_name << " Variable: " << var
        << " written locally with value: " << value << " on sites: " << ret
        << endl;
 }
 
 void TransactionManager::dump() {
   for (auto& kv : site_map) {
-    outFile << (kv.second)->getName() << " - " << (kv.second)->getDump() << endl;
+    cout << (kv.second)->getName() << " - " << (kv.second)->getDump() << endl;
   }
 }
 
@@ -336,7 +331,7 @@ string TransactionManager::isSafeToCommit(const vector<string>& params, int time
   Transaction endTransaction;
 
   if (active_transactions.find(params[0]) == active_transactions.end()) {
-    outFile << "Unable to find this transaction in active transactions: "
+    cout << "Unable to find this transaction in active transactions: "
           << params[0] << endl;
     return "No active transactions";
   }
@@ -422,7 +417,7 @@ void TransactionManager::processCommit(const string& txn_name, int time) {
 
 void TransactionManager::processAbort(const string& txn_name, string str) {
 
-  outFile << txn_name << " aborts, " << "WHY: " << str  << endl;
+  cout << txn_name << " aborts, " << "WHY: " << str  << endl;
 
   active_transactions[txn_name].isaborted = true;
   temp_graph = serialization_graph;
@@ -431,11 +426,6 @@ void TransactionManager::processAbort(const string& txn_name, string str) {
 
 int main(int argc, char *argv[]) {
 
-  if (argc < 3) {
-    cout << "Error: At least 2 arguments are required: ./repcrep <input_file> <output_file>" << endl;
-    return 0;
-  }
-
-  TransactionManager tm(argv[1], argv[2]);
+  TransactionManager tm;
   return 0;
 }

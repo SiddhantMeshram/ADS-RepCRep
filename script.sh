@@ -18,5 +18,5 @@ for input_file in "$input_dir"/input*; do
   output_file="$output_dir/output$file_number"
 
   # Run the repcrep command
-  ./repcrep "$input_file" "$output_file"
+  ./repcrep < "$input_file" > "$output_file"
 done
